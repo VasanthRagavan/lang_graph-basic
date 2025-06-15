@@ -88,8 +88,28 @@ builder.add_edge("general_handler", END)
 
 resume_graph = builder.compile()
 
+import fitz  # PyMuPDF
+
+def extract_text_from_pdf(pdf_path: str) -> str:
+    text = ""
+    with fitz.open(pdf_path) as doc:
+        for page in doc:
+            text += page.get_text()
+    return text
+
+
 def main():
-    user_input = input("📤 Paste your resume or ask something: ")
+    choice = input("Enter 1 to paste resume, 2 to upload a PDF file: ")
+
+    if choice == "1":
+        user_input = input("📄 Paste your resume or question: ")
+    elif choice == "2":
+        path = input("📂 Enter path to your resume (PDF): ")
+        user_input = extract_text_from_pdf(path)
+        print("✅ Extracted resume text.")
+    else:
+        print("❌ Invalid option.")
+        return
 
     initial_state: ResumeState = {
         "user_query": user_input,
@@ -101,8 +121,10 @@ def main():
     for event in resume_graph.stream(initial_state):
         print("Event", event)
 
-    print("\n📄 Final Output:")
-    print("Score:", initial_state.get("score"))
-    print("Critique/Response:", initial_state.get("critique"))
+    print("\n📊 Final Output:")
+    if initial_state["score"] is not None:
+        print(f"Score: {initial_state['score']}")
+    print("Critique:", initial_state["critique"])
+
 
 main()
