@@ -8,16 +8,16 @@ client = OpenAI()
 
 class State(TypedDict):
     query : str
-    llm_result : str
+    llm_result : str | None
 
 
 def chat_bot(state : State):
     query = state['query']
     llm_response = client.chat.completions.create(
         model = "chatgpt-4o-latest",
-        messages={
-            'role':"user","content":query
-        }
+        messages=[
+            {'role':"user","content":query}   
+        ]
     )
     
     state['llm_result']=llm_response
@@ -29,7 +29,7 @@ graph_builder = StateGraph(State)
 graph_builder.add_node("chat_bot",chat_bot)
 
 graph_builder.add_edge(START,"chat_bot")
-graph_builder.add_edge(chat_bot",END)
+graph_builder.add_edge("chat_bot",END)
 
 graph = graph_builder.compile()
 
@@ -41,7 +41,7 @@ def main():
         "llm_result":None
     }
     
-    graph_result = graph.index(_state)
+    graph_result = graph.invoke(_state)
     
     print("result:",graph_result)
     
